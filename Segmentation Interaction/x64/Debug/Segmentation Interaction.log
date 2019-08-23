@@ -1,0 +1,11 @@
+﻿  optimization.cpp
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(45): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(46): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(54): warning C4267: “初始化”: 从“size_t”转换到“int”，可能丢失数据
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(82): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(143): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(189): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(190): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+f:\project\segmentation interaction\segmentation interaction\optimization.cpp(206): warning C4244: “参数”: 从“double”转换到“float”，可能丢失数据
+  Segmentation Interaction.vcxproj -> F:\Project\Segmentation Interaction\x64\Debug\Segmentation Interaction.exe
+  Segmentation Interaction.vcxproj -> F:\Project\Segmentation Interaction\x64\Debug\Segmentation Interaction.pdb (Full PDB)

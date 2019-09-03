@@ -36,6 +36,9 @@
     <ClCompile Include="optimization.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="solver.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="contour.h">
@@ -54,6 +57,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="optimization.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\NLopt\include\nlopt.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\NLopt\include\nlopt.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="solver.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

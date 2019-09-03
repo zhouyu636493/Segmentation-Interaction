@@ -245,7 +245,7 @@ bool is_in_contour(Point2f mid, vector<Point2f> contour)
 	else
 		return true;//在contour中
 }
-vector<vector<Point2f>> Seg_compute(vector<vector<Point2f>> segment,vector<Point2f> contour,vector<vector<int>>&  intersectint_index)
+vector<vector<Point2f>> Optimization::Seg_compute(vector<vector<Point2f>> segment,vector<Point2f> contour,vector<vector<int>>&  intersecting_index)
 {
 	//segment是一个二维数组，数组为2列n行，n表示分割线数量，数组第一列表示分割线上某一点，数组第二列表示分割线的方向向量
 	//contour表示多边形轮廓
@@ -384,11 +384,29 @@ vector<vector<Point2f>> Seg_compute(vector<vector<Point2f>> segment,vector<Point
 					temp.push_back(intersecting[w]);
 					segment_pairs.push_back(temp);
 					vector<int> temp0;
-					temp0.push_back(intersect_index[s][0]);
-					temp0.push_back(intersect_index[s][1]);
-					temp0.push_back(intersect_index[w][0]);
-					temp0.push_back(intersect_index[w][0]);
-					intersectint_index.push_back(temp0);
+					//这里的每对temp应该从小到大排序
+					if (intersect_index[s][0] < intersect_index[s][1])
+					{
+						temp0.push_back(intersect_index[s][0]);
+						temp0.push_back(intersect_index[s][1]);
+					}
+					else
+					{
+						temp0.push_back(intersect_index[s][1]);
+						temp0.push_back(intersect_index[s][0]);
+
+					}
+					if (intersect_index[w][0]<intersect_index[w][1])
+					{
+						temp0.push_back(intersect_index[w][0]);
+						temp0.push_back(intersect_index[w][1]);
+					}
+					else
+					{
+						temp0.push_back(intersect_index[w][1]);
+						temp0.push_back(intersect_index[w][0]);
+					}
+					intersecting_index.push_back(temp0);
 				}
 				else
 				{

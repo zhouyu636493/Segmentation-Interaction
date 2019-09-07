@@ -13,5 +13,5 @@ public:
 	Optimization();
 	~Optimization();
 	double D_compute(double angle,vector<vector<Point2f>>& seg_contours, vector<vector<int>>& seg_index, vector<vector<Point2f>>& segment_pairs);//计算形变量的函数
-	vector<vector<Point2f>> Seg_compute(vector<vector<Point2f>> segment, vector<Point2f> contour, vector<vector<int>>&  intersecting_index);
+	vector<vector<Point2f>> Seg_compute(vector<vector<Point2f>> segment, vector<cv::Point> contour);
 };

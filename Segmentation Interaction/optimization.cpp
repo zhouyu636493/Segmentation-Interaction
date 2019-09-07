@@ -216,7 +216,7 @@ double crosspruduct(Point2f A,Point2f B)
 {
 	return A.x*B.y - A.y*B.x;
 }
-bool is_in_contour(Point2f mid, vector<Point2f> contour)
+bool is_in_contour(Point2f mid, vector<cv::Point> contour)
 {
 	//判断点mid是否在contour中，在则返回true
 	int n = contour.size();
@@ -245,18 +245,21 @@ bool is_in_contour(Point2f mid, vector<Point2f> contour)
 	else
 		return true;//在contour中
 }
-vector<vector<Point2f>> Optimization::Seg_compute(vector<vector<Point2f>> segment,vector<Point2f> contour,vector<vector<int>>&  intersecting_index)
+//vector<vector<Point2f>> Optimization::Seg_compute(vector<vector<Point2f>> point_direction,vector<Point> contour,vector<vector<int>>&  intersecting_index)
+vector<vector<Point2f>> Optimization::Seg_compute(vector<vector<Point2f>> point_direction, vector<Point> contour)
 {
+	
 	//segment是一个二维数组，数组为2列n行，n表示分割线数量，数组第一列表示分割线上某一点，数组第二列表示分割线的方向向量
 	//contour表示多边形轮廓
 	/*
-	对于每条segment，计算其与多边形边的交点
+	对于每个点与方向，计算该点与方向向量形成的直线与多边形边的交点
 	计算交点的时候，是直线与线段的相交，当他们重合的时候，不需要将线段的两个端点加入进交点集合中，直接忽略即可；
-	如果两个交点之间有多边形顶点，则观察多边形方向，添加分割线到segment-pair；
+	该函数除了可以返回最终的分割线两端点数组segment_pairs，还可以得到与多边形无任何交点的点与向量在 point_direction中的下标
+	
 	*/
 	vector<vector<Point2f>> segment_pairs;
-	vector<int> no_intersect;//存储与多边形无交点的分割线在segment中的下标
-	for (int i = 0; i < segment.size(); i++)
+	vector<int> no_intersect;//存储与多边形无交点的分割线在 point_direction中的下标
+	for (int i = 0; i < point_direction.size(); i++)
 	{
 		int index = i;
 		vector<Point2f> intersecting;//存放分割线与多边形边的交点的集合
@@ -270,8 +273,8 @@ vector<vector<Point2f>> Optimization::Seg_compute(vector<vector<Point2f>> segmen
 			Point2f d1;//t要求是大于等于0小于等于1
 			d1.x = contour[e1].x - contour[e0].x;
 			d1.y = contour[e1].y - contour[e0].y;
-			Point2f P0 = segment[index][0];
-			Point2f d0 = segment[index][1];
+			Point2f P0 = point_direction[index][0];
+			Point2f d0 = point_direction[index][1];
 			double K = crosspruduct(d0, d1);
 			Point2f deta;
 			deta.x = P1.x - P0.x;
@@ -383,30 +386,30 @@ vector<vector<Point2f>> Optimization::Seg_compute(vector<vector<Point2f>> segmen
 					temp.push_back(intersecting[s]);
 					temp.push_back(intersecting[w]);
 					segment_pairs.push_back(temp);
-					vector<int> temp0;
-					//这里的每对temp应该从小到大排序
-					if (intersect_index[s][0] < intersect_index[s][1])
-					{
-						temp0.push_back(intersect_index[s][0]);
-						temp0.push_back(intersect_index[s][1]);
-					}
-					else
-					{
-						temp0.push_back(intersect_index[s][1]);
-						temp0.push_back(intersect_index[s][0]);
+					//vector<int> temp0;
+					////这里的每对temp应该从小到大排序
+					//if (intersect_index[s][0] < intersect_index[s][1])
+					//{
+					//	temp0.push_back(intersect_index[s][0]);
+					//	temp0.push_back(intersect_index[s][1]);
+					//}
+					//else
+					//{
+					//	temp0.push_back(intersect_index[s][1]);
+					//	temp0.push_back(intersect_index[s][0]);
 
-					}
-					if (intersect_index[w][0]<intersect_index[w][1])
-					{
-						temp0.push_back(intersect_index[w][0]);
-						temp0.push_back(intersect_index[w][1]);
-					}
-					else
-					{
-						temp0.push_back(intersect_index[w][1]);
-						temp0.push_back(intersect_index[w][0]);
-					}
-					intersecting_index.push_back(temp0);
+					//}
+					//if (intersect_index[w][0]<intersect_index[w][1])
+					//{
+					//	temp0.push_back(intersect_index[w][0]);
+					//	temp0.push_back(intersect_index[w][1]);
+					//}
+					//else
+					//{
+					//	temp0.push_back(intersect_index[w][1]);
+					//	temp0.push_back(intersect_index[w][0]);
+					//}
+					//intersecting_index.push_back(temp0);
 				}
 				else
 				{
@@ -430,7 +433,3 @@ vector<vector<Point2f>> Optimization::Seg_compute(vector<vector<Point2f>> segmen
 3.如果生成的新轮廓放不下轮廓，
 
 */
-void  myconstraint1()
-{
-
-}

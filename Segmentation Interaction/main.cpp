@@ -20,9 +20,15 @@
 #include "Deformation.h"
 #include "model.h"
 #include "optimization.h"
+#include "solver.h"
+#include <nlopt.hpp>
+
+
+
 using namespace Eigen;
 using namespace std;
 using namespace cv;
+using namespace nlopt;
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Triangulation_vertex_base_2<K> Vb;
 typedef CGAL::Delaunay_mesh_face_base_2<K> Fb;
@@ -42,6 +48,7 @@ typedef CDT::Point CdtPoint;//防止和opencv中的Point混淆
 
 
 
+
 vector<cv::Point> points;
 Mat dstImage;//必须有一个dstImage用来存储原始的图像，否则最后的直线会有很多中间状态的直线显示
 Mat srcImage;//每次从dstImage复制过来图像，然后再此基础上实时显示
@@ -51,6 +58,77 @@ cv::Point pre_1(-1, -1);
 vector<vector<int>> intersect_index;//存储的是segment_pairs中相应分割线和轮廓相交的边的顶点index，每个数组分量有四个分量
 vector<vector<Point2i>> points_set;//存储的是用户输入的线段的两端坐标
 vector<vector<Point2f>> segment_pairs;//存储的是最终分割线在轮廓上的两端坐标
+
+
+double myfunc(const std::vector<double>& var,std::vector<double>& grad, void* data)
+{
+	//需要注意的是mufunc的参数类型必须严格遵照nlopt_func的规定！！！
+	//由于nlopt优化函数中变量必须是浮点类型，所以var应该修改为浮点型数组，前s个表示分割线上的点，后s个表示分割线的方向向量，但是点和方向向量又都是由
+	//两个浮点数表示的，所以最终数组大小为2*2s,也就是：x1,y1,x2,y2,...,xs,ys,xs+1,ys+1,...,x2s,y2s
+	//所以n=4*s 
+	//vartemp是一个二维数组，数组为2列s行，s表示分割线数量，数组第一列表示分割线上某一点，数组第二列表示分割线的方向向量
+	int n = var.size();
+	struct  data* mydata = (struct  data*)data;
+	vector<vector<Point2f>> vartemp;
+	int s = n / 4;//s表示分割线的数量
+	int size_i = 0;
+	while (size_i < 2 * s)
+	{
+		vector<Point2f> temp;
+		Point2f point, direction;
+		point.x = var[size_i];
+		point.y = var[size_i + 1];
+		direction.x = var[2 * s + size_i];
+		direction.y = var[2 * s + size_i + 1];
+		size_i = size_i + 2;
+		temp.push_back(point);
+		temp.push_back(direction);
+		vartemp.push_back(temp);
+	}
+	//上面的程序将double类型的var装到了vector<vector<Point2f>>类型的vartemp中，从而能够在下面的Seg_compute中调用
+
+	Optimization opt;
+	
+	vector<vector<Point2f>>segment_pairs = opt.Seg_compute(vartemp, mydata->contour);//计算vartemp中点和方向向量决定的分割线与轮廓的交点数组segment_pairs
+	Mat Image;
+	Image = cv::Mat::zeros(mydata->Image.rows, mydata->Image.cols, CV_8UC3);
+	Image.setTo(cv::Scalar(255, 255, 255));//设置背景颜色为白色
+	polylines(Image, mydata->contour, true, (0, 0, 255), 2);
+	for (int i = 0; i < segment_pairs.size(); i++)
+	{
+		line(Image, segment_pairs[i][0], segment_pairs[i][1], Scalar(0, 255, 0), 1, CV_AA, 0);
+	}
+	namedWindow("Segmentation", CV_WINDOW_AUTOSIZE);
+	cv::imshow("Segmentation", Image);
+	char key = cv::waitKey(0);
+
+	
+	/*
+	优化中的约束：
+	1.如果直线与多变形交点为0，
+	2.如果两个分割线的交点在多边形内部，
+	3.如果生成的新轮廓放不下轮廓，
+	*/
+	vector<vector<int>> intersect_index; //存储的是segment_pairs中相应分割线和轮廓相交的边的顶点index，每个数组分量有四个分量
+	vector<vector<Point2f>> seg_contours;
+	vector<vector<int>> seg_index;////二维数组，第一个值表示contour的index，第二个表示的是该contour相关的分割线的index
+	vector<Point2f> contour0;
+	for (int a = 0; a < mydata->contour.size(); a++)
+	{
+		Point2f temp;
+		temp.x = mydata->contour[a].x;
+		temp.y = mydata->contour[a].y;
+		contour0.push_back(temp);
+	}
+	seg_contours.push_back(contour0);
+	Solver sol;
+	//需要注意的是在计算下面的函数之前，一定要保证分割线不在多边形内部相交，否则，进行递归二分计算分割后的轮廓的时候就会出现差错
+
+	sol.contour_segmentation(seg_contours, seg_index, intersect_index, segment_pairs);
+
+	double def = opt.D_compute(mydata->angle, seg_contours, seg_index, segment_pairs);
+	return def;
+}
 
 void onMouse(int event, int x, int y, int flags, void* param)
 {
@@ -321,9 +399,12 @@ int main(int argc, char *argv[])
 
 
  //下面是基于我设计的形变量formulation计算形变量具体数值
-	Optimization opt;
-	double deformation=opt.D_compute(angle1 / 180 * PI,  seg_contours,  seg_index, segment_pairs);
+	Optimization op;
+	double deformation=op.D_compute(angle1 / 180 * PI,  seg_contours,  seg_index, segment_pairs);
 	cout << "The deformation of this model is" << deformation << endl;
+
+
+
 
 //下面应该是对分割线基于梯度下降不断优化
 //1.这里第一步应该是当点和方向改变之后求出相应的直线对多变形进行分割的分割线
@@ -332,11 +413,65 @@ int main(int argc, char *argv[])
 //3. 判断任意两个相邻的分割线之间能否放的下一个关节，如果不能
 
 
+	Solver s;
+	int n = segment_pairs.size();
+	struct data* data0=new struct data;
+	data0->angle = angle1 / 180 * PI;
+	data0->contour = contour;
+	data0->Image = dstImage;
+	//nlopt::opt opter(GN_MLSL_LDS, 4 * n);//GN_MLSL_LDS中的N表示无梯度，GD_MLSL_LDS表示有梯度
+	nlopt::opt opter(LN_NEWUOA, 4 * n);
+	opter.set_max_objective(myfunc, data0);
+
+	//使用的算法是https://nlopt.readthedocs.io/en/latest/NLopt_Algorithms/#global-optimization中的MLSL算法
+	/*nlopt_opt opter = nlopt_create(NLOPT_G_MLSL_LDS,4*n);
+	nlopt_set_max_objective(opter, myfunc, data0);
+	nlopt_set_local_optimizer(opter, NULL);*/
+	double maxf;//算法返回的形变量最大值
+	double* nlopt_segment_pairs=new double[4*n];
+	//由于nlopt优化函数中变量必须是浮点类型，所以 nlopt_segment_pairs应该修改为浮点型数组，前n个表示分割线上的点，后n个表示分割线的方向向量，但是点和方向向量又都是由
+	//两个浮点数表示的，所以最终数组大小为2*2n,也就是：x1,y1,x2,y2,...,xn,yn,xn+1,yn+1,...,x2n,y2n
+	for (int i = 0; i < n; i++)
+	{
+		double x = (segment_pairs[i][0].x + segment_pairs[i][1].x) / 2;
+		double y = (segment_pairs[i][0].y+ segment_pairs[i][1].y) / 2;
+		nlopt_segment_pairs[i*2] = x;
+		nlopt_segment_pairs[i*2+1] =y;
+		double dx = segment_pairs[i][1].x - segment_pairs[i][0].x;
+		double dy = segment_pairs[i][1].y - segment_pairs[i][0].y;
+		nlopt_segment_pairs[2 * n + i * 2] = dx;
+		nlopt_segment_pairs[2 * n + i * 2 +1] = dy;
+	}
+	//上面的程序是将segment_pairs转变为优化算法的初始化变量数组，其中分割线上任意一点用分割线中点表示
+	std::vector<double> nlopt_segment;
+	for (int i = 0; i < 4 * n; i++)
+	{
+		nlopt_segment.push_back(nlopt_segment_pairs[i]);
+	}
+	
+	try 
+	{
+		result result = opter.optimize(nlopt_segment, maxf);
+		std::cout << "found maximum is" << maxf << endl;
+		
+	}
+	catch(std::exception &e)
+	{
+		std::cout << "nlopt failed!" <<e.what()<<std:: endl;
+	}
+	
+	/*if (nlopt_optimize(opter, nlopt_segment_pairs, &maxf) < 0)
+	{
+		cout << "nlopt failed!\n" << endl;
+	}
+	else
+	{
+		cout << "found maximum is" << maxf << endl;
+	}
 
 
-
-
-
+	nlopt_destroy(opter);
+*/
 
 
 
@@ -901,5 +1036,7 @@ int main(int argc, char *argv[])
 	}
 	cv::imshow("Segmentation", dstImage);
 	cv::waitKey(0);
+	delete [] nlopt_segment_pairs;
+	delete data0;
 	return 0;
 }

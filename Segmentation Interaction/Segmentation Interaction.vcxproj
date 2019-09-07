@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\CGAL-4.13\include;D:\CGAL-4.13\auxiliary\gmp\include;D:\CGAL-4.13\build\include;D:\boost\boost_1_65_0;F:\Project\Segmentation Interaction\Segmentation Interaction;D:\NLopt\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\CGAL-4.13\lib;D:\CGAL-4.13\auxiliary\gmp\lib;D:\boost\boost_1_65_0\lib64-msvc-14.1;D:\CGAL-4.13\build\lib;D:\eigen3\eigen-eigen-3;D:\NLopt\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\CGAL-4.13\include;D:\CGAL-4.13\auxiliary\gmp\include;D:\CGAL-4.13\build\include;D:\boost\boost_1_65_0;F:\Project\Segmentation Interaction\Segmentation Interaction;D:\nlopt64;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\CGAL-4.13\lib;D:\CGAL-4.13\auxiliary\gmp\lib;D:\boost\boost_1_65_0\lib64-msvc-14.1;D:\CGAL-4.13\build\lib;D:\eigen3\eigen-eigen-3;D:\nlopt64;$(LibraryPath)</LibraryPath>
     <SourcePath>D:\CGAL-4.13\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -106,12 +106,12 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>D:\eigen3\eigen-eigen-3;D:\NLopt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\eigen3\eigen-eigen-3;D:\NLopt;D:\nlopt64;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>boost_system-vc141-mt-gd-1_65.lib;libgmp-10.lib;libnlopt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>boost_system-vc141-mt-gd-1_65.lib;libgmp-10.lib;libnlopt-0.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
